@@ -1,0 +1,45 @@
+/* Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS custom properties */
+@layer base {
+  :root {
+    --sk-bg:       #0d1117;
+    --sk-surface:  #161b22;
+    --sk-border:   #21262d;
+    --sk-text:     #c9d1d9;
+    --sk-muted:    #6e7681;
+    --sk-accent:   #58a6ff;
+    --sk-pink:     #f0a0b0;
+    --sk-blue:     #7dcfff;
+  }
+
+  html, body {
+    @apply bg-sk-bg text-sk-text font-sans;
+    height: 100%;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--sk-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sk-border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--sk-muted);
+  }
+}
