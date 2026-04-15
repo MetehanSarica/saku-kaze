@@ -47,13 +47,28 @@ pub fn spawn_pty(state: State<'_, PtyState>, app: AppHandle) -> Result<(), Strin
         })
         .map_err(|e| format!("Failed to open PTY: {e}"))?;
 
-    let mut cmd = CommandBuilder::new("powershell.exe");
+    let cmd_name = "powershell.exe";
+    let mut cmd = CommandBuilder::new(cmd_name);
     cmd.args(["-NoLogo", "-NoProfile"]);
 
     // spawn_command takes &self so pair.slave remains owned afterwards.
-    pair.slave
-        .spawn_command(cmd)
-        .map_err(|e| format!("Failed to spawn PowerShell: {e}"))?;
+    // Catch NotFound so a missing interpreter shows a clear message in the
+    // terminal instead of a silent pipe failure.
+    if let Err(e) = pair.slave.spawn_command(cmd) {
+        let err_str = e.to_string();
+        let is_not_found = err_str.contains("os error 2")
+            || err_str.to_lowercase().contains("not found")
+            || err_str.to_lowercase().contains("no such file");
+        if is_not_found {
+            let msg = format!(
+                "\r\n[Saku Kaze Error]: '{cmd_name}' is not recognized. \
+                 Ensure it is installed and added to your system PATH.\r\n"
+            );
+            let _ = app.emit("pty-output", msg);
+            return Ok(());
+        }
+        return Err(format!("Failed to spawn {cmd_name}: {e}"));
+    }
 
     let writer = pair
         .master

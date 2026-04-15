@@ -21,6 +21,7 @@
   import CommandPalette from '$lib/components/CommandPalette.svelte';
   import ContextMenu    from '$lib/components/ContextMenu.svelte';
   import Toast          from '$lib/components/Toast.svelte';
+  import SettingsModal  from '$lib/components/SettingsModal.svelte';
 
   import { loadSettings, primeCache } from '$lib/ipc/settings';
   import {
@@ -330,6 +331,7 @@
 <CommandPalette />
 <ContextMenu />
 <Toast />
+<SettingsModal />
 
 <style>
   :global(body) { margin: 0; overflow: hidden; }

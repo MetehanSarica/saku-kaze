@@ -61,6 +61,13 @@ class UiStore {
 
   clearOutput(): void { this.outputLines = []; }
 
+  // ── Settings modal ───────────────────────────────────────────────────
+  isSettingsOpen = $state(false);
+
+  openSettings()   { this.isSettingsOpen = true;  }
+  closeSettings()  { this.isSettingsOpen = false; }
+  toggleSettings() { this.isSettingsOpen = !this.isSettingsOpen; }
+
   // ── Context menu ─────────────────────────────────────────────────────
   contextMenuOpen = $state(false);
   contextMenuX    = $state(0);

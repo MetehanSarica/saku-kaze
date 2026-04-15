@@ -39,6 +39,7 @@ import {
   defaultHighlightStyle,
   foldGutter,
   indentUnit,
+  syntaxTree,
 } from '@codemirror/language';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import {
@@ -47,7 +48,7 @@ import {
   closeBrackets,
   closeBracketsKeymap,
 } from '@codemirror/autocomplete';
-import { lintKeymap, lintGutter, linter } from '@codemirror/lint';
+import { lintKeymap, lintGutter, linter, type Diagnostic } from '@codemirror/lint';
 import type { Extension } from '@codemirror/state';
 
 // ---------------------------------------------------------------------------
@@ -95,10 +96,26 @@ export function createBaseExtensions(opts: BaseExtensionOptions): Extension[] {
     // ── Core editing behaviours ─────────────────────────────────────────
     lineNumbers(),
     lintGutter(),
-    // No-op linter: enables the lint panel, Ctrl+Shift+M, and lintKeymap
-    // without producing false diagnostics. Replace () => [] with a real
-    // LintSource (e.g. LSP-backed) when language servers are integrated.
-    linter(() => []),
+    // Syntax-error linter: walks the Lezer parse tree and flags every error
+    // node the active language grammar emits as a red squiggly diagnostic.
+    // Works for all Lezer-backed languages (JS, TS, Python, Rust, CSS, JSON…).
+    // Falls back to zero diagnostics for plaintext (no parser, no errors).
+    linter((view) => {
+      const diagnostics: Diagnostic[] = [];
+      syntaxTree(view.state).iterate({
+        enter(node) {
+          if (node.type.isError) {
+            diagnostics.push({
+              from: node.from,
+              to: Math.max(node.to, node.from + 1),
+              severity: 'error',
+              message: 'Syntax error',
+            });
+          }
+        },
+      });
+      return diagnostics;
+    }),
     highlightActiveLineGutter(),
     highlightSpecialChars(),
     history(),

@@ -73,12 +73,12 @@
 
   <!-- Bottom icons -->
   <div class="ab-group ab-group--bottom">
-    <button class="ab-btn" title="Account" aria-label="Account">
+    <button class="ab-btn" title="Account" aria-label="Account" onclick={() => uiStore.toggleSettings()}>
       <svg class="ab-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm0 11c-5 0-9 2.24-9 5v1h18v-1c0-2.76-4-5-9-5z"/>
       </svg>
     </button>
-    <button class="ab-btn" title="Settings" aria-label="Settings">
+    <button class="ab-btn" title="Settings" aria-label="Settings" onclick={() => uiStore.toggleSettings()}>
       <svg class="ab-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.69.07-1.08s-.03-.73-.07-1.08l2.3-1.8c.21-.16.27-.45.13-.68l-2.18-3.78c-.13-.23-.42-.31-.65-.23l-2.72 1.09c-.56-.43-1.16-.79-1.82-1.05L14.17 2H9.83L9.5 4.96C8.84 5.22 8.24 5.58 7.68 6.01L4.96 4.92c-.23-.08-.52 0-.65.23L2.13 8.93c-.14.23-.08.52.13.68l2.3 1.8c-.04.35-.07.7-.07 1.09s.03.73.07 1.08l-2.3 1.8c-.21.16-.27.45-.13.68l2.18 3.78c.13.23.42.31.65.23l2.72-1.09c.56.43 1.16.79 1.82 1.05l.33 2.96h4.34l.33-2.96c.66-.26 1.26-.62 1.82-1.05l2.72 1.09c.23.08.52 0 .65-.23l2.18-3.78c.14-.23.08-.52-.13-.68l-2.3-1.8z"/>
       </svg>
