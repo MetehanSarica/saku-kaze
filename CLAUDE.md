@@ -25,7 +25,8 @@ src/
   routes/+page.svelte        root layout, global keyboard shortcuts, close guard, F5 "run file"
   lib/ipc/*.ts               typed wrappers around invoke() — one per Rust command
   lib/stores/*.svelte.ts     rune-based store classes, each exports a singleton
-                             (fileStore, editorStore, workspaceStore, uiStore, toastStore)
+                             (fileStore, editorStore, workspaceStore, uiStore, toastStore, terminalStore)
+  lib/run.ts                 F5 run: builds the PowerShell command line per file extension
   lib/codemirror/            setup.ts (base extensions + Compartments), languages.ts, themes/sakuDark.ts
   lib/components/            Svelte 5 components (Editor, TabBar, Sidebar, FileTreeNode, BottomPanel, …)
 src-tauri/src/
@@ -39,7 +40,7 @@ src-tauri/src/
 
 - All filesystem / OS access lives in Rust as `#[tauri::command]` returning `Result<T, String>`.
 - No `unwrap()` / `expect()` in command code — use `map_err(|e| format!("…'{}': {}", path, e))` and include the path.
-- New command checklist: implement in `commands/*.rs` → register in `lib.rs` `generate_handler!` → add a typed wrapper in `src/lib/ipc/` → call the wrapper from stores. Components should not call `invoke()` directly (the terminal code in `BottomPanel.svelte` / `+page.svelte` is a legacy exception).
+- New command checklist: implement in `commands/*.rs` → register in `lib.rs` `generate_handler!` → add a typed wrapper in `src/lib/ipc/` → call the wrapper from stores/components. Never call `invoke()` or `listen()` directly outside `src/lib/ipc/`.
 - Argument names: JS passes camelCase (`{ oldPath }`), Tauri maps to Rust snake_case (`old_path`).
 - Struct field casing differs per model: `AppSettings` uses `#[serde(rename_all = "camelCase")]`, `FileNode` does **not** (`is_dir`). The TS interface must mirror the Rust struct exactly.
 - File writes are atomic: write `.<name>.sktmp` in the same dir, then `rename`. Keep that pattern.
@@ -72,7 +73,11 @@ Persisted at `~/.saku-kaze/settings.json`. Adding a field means touching **all f
 
 ## Terminal (PTY)
 
-`commands/terminal.rs` keeps one PowerShell PTY in `PtyState`. On Windows ConPTY, dropping the slave or master kills the child — both must stay stored. Output is emitted as `pty-output` events; input goes through `write_pty`. Known gaps: no resize command, no respawn after `exit`, UTF-8 can split across 4 KB reads.
+`commands/terminal.rs` keeps one PowerShell session in `PtyState` (`Option<PtySession>`). On Windows ConPTY, dropping the slave or master kills the child — both stay stored in the session. `spawn_pty(cwd, cols, rows)` is idempotent; a waiter thread clears the session and emits `pty-exit` when the shell ends (a session `id` stops stale waiters clearing a newer shell). Output is `pty-output` events, decoded with `decode_utf8_stream` so characters split across reads survive. `resize_pty` follows xterm's `onResize`.
+
+Frontend: wrappers in `ipc/terminal.ts`; `terminalStore` owns the lifecycle — `BottomPanel` registers a starter with `attach()`, and anything needing a shell calls `terminalStore.ensureRunning()` (dedupes concurrent starts, restarts after exit). `BottomPanel` stays mounted while hidden (`.bottom-slot` in `+page.svelte`) so the session and scrollback survive closing the panel.
+
+F5 run: `buildRunCommand()` in `src/lib/run.ts` builds `Push-Location <file dir>; try { <runner> } finally { Pop-Location }`. Always quote paths with `psQuote()` (single quotes — no `$` expansion). Add runners to the `RUNNERS` map.
 
 ## Offline & styling
 

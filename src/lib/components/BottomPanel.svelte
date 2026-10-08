@@ -5,14 +5,18 @@
    * The TERMINAL tab hosts an xterm.js instance wired to a true PTY process
    * via the portable-pty Rust backend. All input/output flows through the
    * native PTY — no fake REPL, no prompt simulation.
+   *
+   * The panel stays mounted while hidden (see +page.svelte), so the terminal
+   * and its scrollback survive closing/reopening the panel.
    */
   import { onDestroy }   from 'svelte';
   import { Terminal }    from '@xterm/xterm';
   import { FitAddon }    from '@xterm/addon-fit';
-  import { invoke }      from '@tauri-apps/api/core';
-  import { listen }      from '@tauri-apps/api/event';
   import type { UnlistenFn } from '@tauri-apps/api/event';
-  import { uiStore }     from '$lib/stores/uiStore.svelte';
+  import { spawnPty, writePty, resizePty, onPtyOutput, onPtyExit } from '$lib/ipc/terminal';
+  import { uiStore }        from '$lib/stores/uiStore.svelte';
+  import { terminalStore }  from '$lib/stores/terminalStore.svelte';
+  import { workspaceStore } from '$lib/stores/workspaceStore.svelte';
   import type { BottomTab } from '$lib/stores/uiStore.svelte';
   import '@xterm/xterm/css/xterm.css';
 
@@ -57,6 +61,21 @@
   let fitAddon:       FitAddon       | null = null;
   let resizeObserver: ResizeObserver | null = null;
   let unlistenPty:    UnlistenFn    | null = null;
+  let unlistenExit:   UnlistenFn    | null = null;
+
+  /** Fit xterm to its container; skipped while hidden (no size to fit). */
+  function fit(): void {
+    if (xtermEl && xtermEl.offsetWidth > 0 && xtermEl.offsetHeight > 0) fitAddon?.fit();
+  }
+
+  function writeError(msg: string): void {
+    term?.write(`\x1b[31m[${msg}]\x1b[0m\r\n`);
+  }
+
+  /** Start (or restart) the shell, reporting failures inside the terminal. */
+  function startShell(): void {
+    terminalStore.ensureRunning().catch((err) => writeError(`Failed to start PTY: ${err}`));
+  }
 
   // ── Terminal initialisation ─────────────────────────────────────────────
 
@@ -97,49 +116,68 @@
     fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.open(xtermEl);
-    requestAnimationFrame(() => fitAddon?.fit());
+    fit();
 
     resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() => fitAddon?.fit());
+      requestAnimationFrame(fit);
     });
     resizeObserver.observe(xtermEl);
 
-    // Pipe all PTY output directly into xterm.
-    unlistenPty = await listen<string>('pty-output', (event) => {
-      term?.write(event.payload);
+    // Keep the PTY size in step with the xterm viewport (fires after fit()).
+    term.onResize(({ cols, rows }) => {
+      resizePty(cols, rows).catch((err) => writeError(`resize_pty error: ${err}`));
     });
 
-    // Spawn the real PTY process in the backend.
-    try {
-      await invoke('spawn_pty');
-    } catch (err) {
-      term.write('\x1b[31m[Failed to start PTY: ' + err + ']\x1b[0m\r\n');
-      return;
-    }
+    // Pipe all PTY output directly into xterm.
+    unlistenPty = await onPtyOutput((text) => term?.write(text));
+
+    unlistenExit = await onPtyExit((code) => {
+      terminalStore.markExited();
+      const status = code === null ? '' : ` with code ${code}`;
+      term?.write(`\r\n\x1b[90m[Process exited${status}. Press any key to start a new shell.]\x1b[0m\r\n`);
+    });
 
     // Forward every keystroke from xterm directly to the PTY master.
+    // After the shell has exited, the next key starts a new one instead.
     term.onData((data: string) => {
-      invoke('write_pty', { data }).catch((err) => {
-        term?.write('\x1b[31m[write_pty error: ' + err + ']\x1b[0m\r\n');
+      if (!terminalStore.running) {
+        startShell();
+        return;
+      }
+      writePty(data).catch((err) => writeError(`write_pty error: ${err}`));
+    });
+
+    // The starter spawns the shell at the terminal's current size, in the
+    // open workspace folder (or the home directory).
+    terminalStore.attach(async () => {
+      fit();
+      await spawnPty({
+        cwd:  workspaceStore.rootPath,
+        cols: term?.cols ?? 80,
+        rows: term?.rows ?? 24,
       });
     });
+    startShell();
   }
 
-  // Lazy-init on first visit to TERMINAL tab; subsequent tab switches refit explicitly
-  // because removing display:none doesn't always trigger a ResizeObserver callback.
+  // Lazy-init the first time the TERMINAL tab is visible; afterwards refit on
+  // every show, because removing display:none doesn't always trigger a
+  // ResizeObserver callback.
   $effect(() => {
-    const isTerminal = uiStore.activeBottomTab === 'terminal';
-    if (!isTerminal || !xtermEl) return;
+    const visible = uiStore.bottomPanelOpen && !uiStore.zenMode && uiStore.activeBottomTab === 'terminal';
+    if (!visible || !xtermEl) return;
 
     if (!term) {
       requestAnimationFrame(() => initTerminal());
     } else {
-      requestAnimationFrame(() => fitAddon?.fit());
+      requestAnimationFrame(fit);
     }
   });
 
   onDestroy(() => {
+    terminalStore.detach();
     unlistenPty?.();
+    unlistenExit?.();
     resizeObserver?.disconnect();
     window.removeEventListener('mousemove', onMove);
     window.removeEventListener('mouseup', onUp);

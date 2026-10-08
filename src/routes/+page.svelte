@@ -29,7 +29,9 @@
     saveFileDialog,
     askSaveBeforeClose,
   } from '$lib/ipc/dialogs';
-  import { invoke } from '@tauri-apps/api/core';
+  import { writePty } from '$lib/ipc/terminal';
+  import { buildRunCommand, fileExtension } from '$lib/run';
+  import { terminalStore }   from '$lib/stores/terminalStore.svelte';
 
   import { fileStore }       from '$lib/stores/fileStore.svelte';
   import { editorStore }     from '$lib/stores/editorStore.svelte';
@@ -189,11 +191,20 @@
 
   // ── Run code ───────────────────────────────────────────────────────────────
   // Routes execution through the PTY terminal so stateful shell commands
-  // (cd, virtual envs, cargo workspaces) work correctly.
+  // (cd, virtual envs, cargo workspaces) work correctly. The command line is
+  // built by $lib/run.ts and runs from the file's own directory.
+
+  function notRunnable(path: string): void {
+    const ext = fileExtension(path);
+    toastStore.error(`Run is not configured for ${ext ? `.${ext}` : 'this kind of'} files.`);
+  }
 
   async function runCode(): Promise<void> {
     const file = fileStore.activeFile;
     if (!file) return;
+
+    // Don't save a file we can't run anyway.
+    if (file.path && !buildRunCommand(file.path)) { notRunnable(file.path); return; }
 
     // ── Untitled buffer: prompt to save first (VS Code behaviour) ─────────
     if (!file.path) {
@@ -218,30 +229,18 @@
 
     const resolvedPath = file.path;
     if (!resolvedPath) return;
-    const ext = resolvedPath.replace(/\\/g, '/').split('.').pop()?.toLowerCase() ?? '';
 
-    const ptyCommands: Record<string, string> = {
-      py:  `python "${resolvedPath}"\r`,
-      rs:  `cargo run\r`,
-      js:  `node "${resolvedPath}"\r`,
-      mjs: `node "${resolvedPath}"\r`,
-      ts:  `npx ts-node "${resolvedPath}"\r`,
-    };
-
-    const cmd = ptyCommands[ext];
-    if (!cmd) {
-      toastStore.error(`Run is not configured for .${ext || 'unknown'} files.`);
-      return;
-    }
+    const cmd = buildRunCommand(resolvedPath);
+    if (!cmd) { notRunnable(resolvedPath); return; }
 
     // Ensure the terminal panel is visible before sending the command.
     uiStore.bottomPanelOpen = true;
     uiStore.setActiveBottomTab('terminal');
 
     try {
-      // spawn_pty is idempotent — safe to call even if the terminal is already running.
-      await invoke('spawn_pty');
-      await invoke('write_pty', { data: cmd });
+      // Waits for the terminal to initialise and (re)starts the shell if needed.
+      await terminalStore.ensureRunning();
+      await writePty(cmd);
     } catch (err: unknown) {
       toastStore.error(`Run failed: ${err}`);
     }
@@ -304,10 +303,11 @@
         {/if}
       </div>
 
-      <!-- Bottom panel (resizable, hidden in zen mode) -->
-      {#if uiStore.bottomPanelOpen && !uiStore.zenMode}
+      <!-- Bottom panel (resizable, hidden in zen mode). Kept mounted while
+           hidden so the terminal session and scrollback survive. -->
+      <div class="bottom-slot" class:bottom-slot--hidden={!uiStore.bottomPanelOpen || uiStore.zenMode}>
         <BottomPanel />
-      {/if}
+      </div>
     </div>
 
   </div>
@@ -366,6 +366,10 @@
     overflow: hidden;
     position: relative;
   }
+
+  /* Transparent wrapper: BottomPanel's children lay out as flex items of .center-col */
+  .bottom-slot         { display: contents; }
+  .bottom-slot--hidden { display: none; }
 
   /* ── Welcome screen ───────────────────────────────── */
   .welcome {
