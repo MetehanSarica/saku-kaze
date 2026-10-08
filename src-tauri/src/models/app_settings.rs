@@ -1,8 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 /// User-configurable settings persisted to `~/.saku-kaze/settings.json`.
+///
+/// `#[serde(default)]` fills any missing field from [`AppSettings::default()`],
+/// so adding a field never invalidates an existing settings file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct AppSettings {
     /// Editor font size in pixels (default 14).
     pub font_size: u32,

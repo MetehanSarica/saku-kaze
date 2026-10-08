@@ -58,24 +58,29 @@ pub async fn read_file(app: tauri::AppHandle, path: String) -> Result<String, St
     let bytes = std::fs::read(&path)
         .map_err(|e| format!("Failed to read '{}': {}", path, e))?;
 
+    // Validate the whole file once. Validating per-chunk would reject valid
+    // files whenever a multi-byte character straddles a chunk boundary.
+    let text = String::from_utf8(bytes).map_err(|_| {
+        format!(
+            "'{}' does not appear to be valid UTF-8. Binary file support is not implemented.",
+            path
+        )
+    })?;
+
     if size > LARGE_FILE_THRESHOLD {
         // ── Streaming mode ────────────────────────────────────────────────
-        // Read entire file into memory then stream over IPC in 1 MiB chunks.
+        // Stream over IPC in ~1 MiB chunks split on char boundaries.
         // The frontend sets up its listener before calling invoke(), so no
         // chunks are lost.
-        let chunks: Vec<&[u8]> = bytes.chunks(CHUNK_SIZE).collect();
+        let chunks = split_on_char_boundaries(&text, CHUNK_SIZE);
         let total = chunks.len();
 
-        for (i, chunk) in chunks.iter().enumerate() {
-            let data = String::from_utf8(chunk.to_vec()).map_err(|_| {
-                format!("'{}' is not valid UTF-8 — binary files are not supported.", path)
-            })?;
-
+        for (i, chunk) in chunks.into_iter().enumerate() {
             app.emit(
                 "file-chunk",
                 FileChunkPayload {
                     path: path.clone(),
-                    data,
+                    data: chunk.to_string(),
                     done: i == total - 1,
                 },
             )
@@ -87,12 +92,35 @@ pub async fn read_file(app: tauri::AppHandle, path: String) -> Result<String, St
     }
 
     // ── Small file ────────────────────────────────────────────────────────
-    String::from_utf8(bytes).map_err(|_| {
-        format!(
-            "'{}' does not appear to be valid UTF-8. Binary file support is not implemented.",
-            path
-        )
-    })
+    Ok(text)
+}
+
+/// Split `text` into slices of at most `max_bytes` bytes, never cutting a
+/// multi-byte UTF-8 character in half. Always returns at least one slice.
+fn split_on_char_boundaries(text: &str, max_bytes: usize) -> Vec<&str> {
+    let mut chunks = Vec::new();
+    let mut start = 0;
+
+    while start < text.len() {
+        let mut end = (start + max_bytes).min(text.len());
+        while !text.is_char_boundary(end) {
+            end -= 1;
+        }
+        if end == start {
+            // max_bytes is smaller than this character — emit it whole.
+            end = start + 1;
+            while !text.is_char_boundary(end) {
+                end += 1;
+            }
+        }
+        chunks.push(&text[start..end]);
+        start = end;
+    }
+
+    if chunks.is_empty() {
+        chunks.push("");
+    }
+    chunks
 }
 
 // ---------------------------------------------------------------------------
@@ -154,4 +182,33 @@ pub async fn rename_file(old_path: String, new_path: String) -> Result<(), Strin
     std::fs::rename(&old_path, &new_path).map_err(|e| {
         format!("Failed to rename '{}' → '{}': {}", old_path, new_path, e)
     })
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::split_on_char_boundaries;
+
+    #[test]
+    fn chunks_reassemble_to_original() {
+        let text = "ağaç şeker ığdır ünlü çiçek 咲く風 🍃".repeat(50);
+        let chunks = split_on_char_boundaries(&text, 7);
+        assert_eq!(chunks.concat(), text);
+        assert!(chunks.iter().all(|c| c.len() <= 7));
+    }
+
+    #[test]
+    fn never_splits_a_multibyte_char() {
+        // "a" then a 4-byte emoji: a 2-byte limit would cut the emoji.
+        let chunks = split_on_char_boundaries("a🍃b", 2);
+        assert_eq!(chunks, vec!["a", "🍃", "b"]);
+    }
+
+    #[test]
+    fn empty_text_yields_one_empty_chunk() {
+        assert_eq!(split_on_char_boundaries("", 1024), vec![""]);
+    }
 }

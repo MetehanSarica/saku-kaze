@@ -4,7 +4,7 @@
    * Imports itself recursively for directories.
    */
   import FileTreeNode   from './FileTreeNode.svelte';
-  import { fileStore }  from '$lib/stores/fileStore.svelte';
+  import { fileStore, samePath } from '$lib/stores/fileStore.svelte';
   import { toastStore } from '$lib/stores/toastStore.svelte';
   import { renameFile, deleteFile } from '$lib/ipc/files';
   import { workspaceStore } from '$lib/stores/workspaceStore.svelte';
@@ -105,7 +105,7 @@
 
   // $derived ensures indent re-computes if depth ever becomes reactive.
   const indent   = $derived(`${depth * 12 + 8}px`);
-  const isActive = $derived(!node.is_dir && fileStore.activeFileId === node.path);
+  const isActive = $derived(!node.is_dir && samePath(fileStore.activeFile?.path ?? null, node.path));
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

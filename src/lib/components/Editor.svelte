@@ -4,19 +4,21 @@
    *
    * Responsibilities:
    *  - Create and own a single EditorView instance (lifecycle: mount → destroy).
-   *  - Sync INBOUND: watch fileStore.activeFile; when a new file is opened or
-   *    the active tab switches, replace the editor document.
+   *  - Keep one EditorState per tab. Switching tabs stashes the outgoing state
+   *    (doc, undo history, selection, scroll) and swaps in the incoming one via
+   *    view.setState(), so undo never crosses files.
    *  - Sync OUTBOUND: push every user keystroke to fileStore.updateContent(),
    *    marking the file dirty. Also update editorStore cursor position.
-   *  - Reconfigure Compartments reactively when language, theme, wordWrap, or
-   *    tabSize change in editorStore.
+   *  - Reconfigure Compartments reactively when language, wordWrap, or tabSize
+   *    change in editorStore, and re-apply them to a restored tab state.
    *
    * IPC contract: this component has NO direct filesystem access.
    * All content comes through fileStore, which calls the Rust IPC commands.
    */
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { EditorView }  from '@codemirror/view';
   import { EditorState } from '@codemirror/state';
+  import type { StateEffect } from '@codemirror/state';
   import { indentUnit }  from '@codemirror/language';
 
   import {
@@ -30,6 +32,7 @@
   import { getLanguageExtension }  from '$lib/codemirror/languages';
   import { fileStore }             from '$lib/stores/fileStore.svelte';
   import { editorStore }           from '$lib/stores/editorStore.svelte';
+  import type { LanguageId }       from '$lib/stores/editorStore.svelte';
 
   // ── DOM reference ─────────────────────────────────────────────────────────
   let container: HTMLDivElement;
@@ -44,47 +47,107 @@
    */
   let viewReady = $state(false);
 
-  /**
-   * Guard flag: set to `true` while the effect is dispatching a doc-replace
-   * caused by a file-switch. Prevents the updateListener from echoing the
-   * programmatic change back to fileStore (would corrupt dirty tracking).
-   */
-  let isUpdatingFromStore = false;
+  // ── Per-tab state ─────────────────────────────────────────────────────────
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  /** Stashed editor state of every non-visible tab, keyed by OpenFile.id. */
+  const tabStates = new Map<string, { state: EditorState; scroll: StateEffect<unknown> }>();
 
-  onMount(() => {
-    const initialContent = fileStore.activeFile?.content ?? '';
+  /** Id of the tab whose state is currently loaded in the view. */
+  let currentId: string | null = null;
 
-    const state = EditorState.create({
-      doc: initialContent,
+  // ── Configuration helpers ─────────────────────────────────────────────────
+
+  // For files larger than 1 MiB, syntax highlighting is disabled to keep
+  // the incremental parser from blocking the main thread on large documents.
+  const HIGHLIGHT_SIZE_LIMIT = 1 * 1024 * 1024; // 1 MiB
+
+  function languageFor(lang: LanguageId, docLength: number) {
+    return docLength > HIGHLIGHT_SIZE_LIMIT ? [] : getLanguageExtension(lang);
+  }
+
+  function tabSizeFor(size: number) {
+    return [EditorState.tabSize.of(size), indentUnit.of(' '.repeat(size))];
+  }
+
+  /** Build a fresh EditorState for a tab using the current editor settings. */
+  function createState(content: string, lang: LanguageId): EditorState {
+    return EditorState.create({
+      doc: content,
       extensions: createBaseExtensions({
-        language: getLanguageExtension(editorStore.currentLanguage),
+        language: languageFor(lang, content.length),
         theme:    sakuDark,
         wordWrap: editorStore.wordWrap,
         tabSize:  editorStore.tabSize,
         onUpdate(update) {
-          if (isUpdatingFromStore) return;
-
           // Push doc changes → fileStore (marks file dirty)
-          if (update.docChanged) {
-            const id = fileStore.activeFileId;
-            if (id) {
-              fileStore.updateContent(id, update.state.doc.toString());
-            }
+          if (update.docChanged && currentId) {
+            fileStore.updateContent(currentId, update.state.doc.toString());
           }
 
           // Update cursor label in status bar on every selection change
           if (update.docChanged || update.selectionSet) {
-            const sel  = update.state.selection.main;
-            const line = update.state.doc.lineAt(sel.head);
-            editorStore.setCursor(line.number, sel.head - line.from + 1);
+            updateCursor(update.state);
           }
         },
       }),
     });
+  }
 
-    view = new EditorView({ state, parent: container });
+  /** Re-apply every compartment from current settings (for a restored state). */
+  function applyConfig(v: EditorView, lang: LanguageId): void {
+    v.dispatch({
+      effects: [
+        languageCompartment.reconfigure(languageFor(lang, v.state.doc.length)),
+        themeCompartment.reconfigure(sakuDark),
+        wrapCompartment.reconfigure(editorStore.wordWrap ? EditorView.lineWrapping : []),
+        tabSizeCompartment.reconfigure(tabSizeFor(editorStore.tabSize)),
+      ],
+    });
+  }
+
+  function updateCursor(state: EditorState): void {
+    const sel  = state.selection.main;
+    const line = state.doc.lineAt(sel.head);
+    editorStore.setCursor(line.number, sel.head - line.from + 1);
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+
+  /** Stash the outgoing tab's state and load the state for tab `id`. */
+  function switchTo(v: EditorView, id: string | null): void {
+    if (id === currentId) return;
+
+    if (currentId !== null && fileStore.openFiles.has(currentId)) {
+      tabStates.set(currentId, { state: v.state, scroll: v.scrollSnapshot() });
+    }
+    // Drop stashed states of tabs that have been closed.
+    for (const key of tabStates.keys()) {
+      if (!fileStore.openFiles.has(key)) tabStates.delete(key);
+    }
+
+    currentId = id;
+    const file = id ? fileStore.openFiles.get(id) : undefined;
+    if (!file) return;
+
+    editorStore.setLanguage(file.language);
+
+    const saved = tabStates.get(file.id);
+    if (saved) {
+      tabStates.delete(file.id);
+      v.setState(saved.state);
+      applyConfig(v, file.language);
+      v.dispatch({ effects: saved.scroll });
+    } else {
+      v.setState(createState(file.content, file.language));
+    }
+    updateCursor(v.state);
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+  onMount(() => {
+    view = new EditorView({ parent: container });
+    switchTo(view, fileStore.activeFileId);
     viewReady = true;
 
     // Cleanup on component destroy
@@ -92,72 +155,32 @@
       view?.destroy();
       view = null;
       viewReady = false;
+      currentId = null;
+      tabStates.clear();
     };
   });
 
-  // ── Reactive: sync content when active file changes ────────────────────────
-  //
-  // This effect reads fileStore.activeFile (a Svelte 5 reactive getter) and
-  // fileStore.activeFile.content (a proxied property). It fires:
-  //   a) when the user switches tabs (activeFileId changes → activeFile changes)
-  //   b) when updateContent() is called from the updateListener above
-  //
-  // Case (b) is a no-op because the editor doc already equals the store content
-  // at that point (we pushed from the editor TO the store, not the other way).
-  // The string comparison short-circuits before any dispatch.
+  // ── Reactive: swap state when the active tab changes ──────────────────────
   $effect(() => {
     if (!viewReady || !view) return;
-
-    const file       = fileStore.activeFile;
-    const newContent = file?.content ?? '';
-    const curContent = view.state.doc.toString();
-
-    if (newContent === curContent) return;   // already in sync (case b) → bail
-
-    // Case (a): genuine file switch — replace the whole document
-    isUpdatingFromStore = true;
-    view.dispatch({
-      changes:   { from: 0, to: curContent.length, insert: newContent },
-      selection: { anchor: 0 },
-      // Scroll to top so the user sees the start of the new file
-      effects: EditorView.scrollIntoView(0),
-    });
-    isUpdatingFromStore = false;
-
-    // Detect language from the new file's extension and update the compartment
-    if (file?.path) {
-      editorStore.detectAndSetLanguage(file.path);
-    }
-
-    // Reset status bar
-    editorStore.setCursor(1, 1);
+    const id = fileStore.activeFileId;          // reactive read
+    const v  = view;
+    untrack(() => switchTo(v, id));
   });
 
   // ── Reactive: language compartment ────────────────────────────────────────
-  // For files larger than 1 MiB, syntax highlighting is disabled to keep
-  // the incremental parser from blocking the main thread on large documents.
-  const HIGHLIGHT_SIZE_LIMIT = 1 * 1024 * 1024; // 1 MiB
-
+  // Also records the language on the active tab, so a palette override sticks
+  // to that tab. activeFile is untracked: this must only run on language change.
   $effect(() => {
     if (!viewReady || !view) return;
-    const lang    = editorStore.currentLanguage;   // reactive read
-    const content = fileStore.activeFile?.content ?? '';
-    const langExt = content.length > HIGHLIGHT_SIZE_LIMIT
-      ? []                              // skip heavy parsing for large files
-      : getLanguageExtension(lang);
-    view.dispatch({
-      effects: languageCompartment.reconfigure(langExt),
-    });
-  });
-
-  // ── Reactive: theme compartment ───────────────────────────────────────────
-  // Reserved for Phase 7 (light/dark toggle). For now sakuDark is fixed.
-  // The effect is wired up so swapping is one line when ready.
-  $effect(() => {
-    if (!viewReady || !view) return;
-    // (no reactive read yet — will bind to a theme store field in Phase 7)
-    view.dispatch({
-      effects: themeCompartment.reconfigure(sakuDark),
+    const lang = editorStore.currentLanguage;   // reactive read
+    const v    = view;
+    untrack(() => {
+      const file = fileStore.activeFile;
+      if (file && file.language !== lang) file.language = lang;
+      v.dispatch({
+        effects: languageCompartment.reconfigure(languageFor(lang, v.state.doc.length)),
+      });
     });
   });
 
@@ -175,10 +198,7 @@
     if (!viewReady || !view) return;
     const size = editorStore.tabSize;           // reactive read
     view.dispatch({
-      effects: tabSizeCompartment.reconfigure([
-        EditorState.tabSize.of(size),
-        indentUnit.of(' '.repeat(size)),
-      ]),
+      effects: tabSizeCompartment.reconfigure(tabSizeFor(size)),
     });
   });
 </script>

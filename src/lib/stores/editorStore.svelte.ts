@@ -49,9 +49,9 @@ class EditorStore {
   autoSave = $state<'off' | 'onFocusChange' | 'afterDelay'>('off');
 
   /**
-   * Currently active syntax language.
+   * Syntax language of the active tab.
    * Drives the CodeMirror language Compartment (Phase 4).
-   * Updated automatically when a file is opened (via extension detection).
+   * Editor.svelte mirrors it to/from the active OpenFile.language on tab switch.
    */
   currentLanguage = $state<LanguageId>('plaintext');
 
@@ -145,45 +145,48 @@ class EditorStore {
     this.cursorCol = col;
   }
 
-  /**
-   * Detect the appropriate language from a file extension and apply it.
-   * Returns the detected LanguageId for callers that need it.
-   */
-  detectAndSetLanguage(filePath: string): LanguageId {
-    const ext = filePath.replace(/\\/g, '/').split('/').pop()?.split('.').pop()?.toLowerCase() ?? '';
-    const map: Record<string, LanguageId> = {
-      js:   'javascript',
-      mjs:  'javascript',
-      cjs:  'javascript',
-      jsx:  'javascript',
-      ts:   'typescript',
-      tsx:  'typescript',
-      mts:  'typescript',
-      html: 'html',
-      htm:  'html',
-      svelte: 'html',
-      css:  'css',
-      scss: 'css',
-      less: 'css',
-      json: 'json',
-      jsonc:'json',
-      md:   'markdown',
-      mdx:  'markdown',
-      py:   'python',
-      pyw:  'python',
-      rs:   'rust',
-      cpp:  'cpp',
-      cc:   'cpp',
-      cxx:  'cpp',
-      hpp:  'cpp',
-      c:    'cpp',
-      h:    'cpp',
-      java: 'java',
-    };
-    const lang: LanguageId = map[ext] ?? 'plaintext';
-    this.currentLanguage = lang;
-    return lang;
-  }
 }
 
 export const editorStore = new EditorStore();
+
+// ---------------------------------------------------------------------------
+// Language detection
+// ---------------------------------------------------------------------------
+
+const EXT_LANGUAGE: Record<string, LanguageId> = {
+  js:   'javascript',
+  mjs:  'javascript',
+  cjs:  'javascript',
+  jsx:  'javascript',
+  ts:   'typescript',
+  tsx:  'typescript',
+  mts:  'typescript',
+  html: 'html',
+  htm:  'html',
+  svelte: 'html',
+  css:  'css',
+  scss: 'css',
+  less: 'css',
+  json: 'json',
+  jsonc:'json',
+  md:   'markdown',
+  mdx:  'markdown',
+  py:   'python',
+  pyw:  'python',
+  rs:   'rust',
+  cpp:  'cpp',
+  cc:   'cpp',
+  cxx:  'cpp',
+  hpp:  'cpp',
+  c:    'cpp',
+  h:    'cpp',
+  java: 'java',
+};
+
+/** Detect the language for a file path from its extension (pure — no state change). */
+export function detectLanguage(filePath: string): LanguageId {
+  const base = filePath.replace(/\\/g, '/').split('/').pop() ?? '';
+  if (!base.includes('.')) return 'plaintext';
+  const ext = base.split('.').pop()?.toLowerCase() ?? '';
+  return EXT_LANGUAGE[ext] ?? 'plaintext';
+}

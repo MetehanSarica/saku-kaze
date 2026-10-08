@@ -135,12 +135,7 @@
   }
 
   async function doCloseTab(id: string): Promise<void> {
-    const file = fileStore.openFiles.get(id);
-    if (file?.isDirty) {
-      const discard = window.confirm(`"${file.name}" has unsaved changes.\n\nClose without saving?`);
-      if (!discard) return;
-    }
-    fileStore.closeFile(id);
+    fileStore.closeFileWithConfirm(id);
   }
 
   // ── Global keyboard shortcuts ──────────────────────────────────────────────
@@ -197,28 +192,24 @@
   // (cd, virtual envs, cargo workspaces) work correctly.
 
   async function runCode(): Promise<void> {
-    let file = fileStore.activeFile;
+    const file = fileStore.activeFile;
     if (!file) return;
 
     // ── Untitled buffer: prompt to save first (VS Code behaviour) ─────────
     if (!file.path) {
-      const savedPath = await doSaveAs(fileStore.activeFileId!).catch((err: unknown) => {
+      const savedPath = await doSaveAs(file.id).catch((err: unknown) => {
         toastStore.error(`Save failed: ${err}`);
         return null;
       });
       if (!savedPath) return; // user cancelled — abort silently
-
-      // Re-read the store entry after the id migration (untitled-N → real path).
-      file = fileStore.openFiles.get(savedPath) ?? fileStore.activeFile;
-      if (!file?.path) return;
-      // doSaveAs already wrote the file to disk — nothing more to do here.
+      // doSaveAs already wrote the file to disk; the tab id is unchanged.
     } else {
       // ── Named file: silent auto-save before execution ──────────────────
       // The shell reads from disk, so we flush the current editor state now.
       // fileStore.saveFile writes the in-memory buffer atomically and clears
       // the dirty flag so the tab indicator stays accurate.
       try {
-        await fileStore.saveFile(fileStore.activeFileId!);
+        await fileStore.saveFile(file.id);
       } catch (err: unknown) {
         toastStore.error(`Auto-save failed: ${err}`);
         return;
@@ -226,6 +217,7 @@
     }
 
     const resolvedPath = file.path;
+    if (!resolvedPath) return;
     const ext = resolvedPath.replace(/\\/g, '/').split('.').pop()?.toLowerCase() ?? '';
 
     const ptyCommands: Record<string, string> = {

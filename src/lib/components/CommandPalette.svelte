@@ -58,15 +58,19 @@
         if (!id) return;
         const file = fileStore.openFiles.get(id);
         if (!file) return;
-        if (!file.path) {
-          // Untitled — fall through to Save As
-          const path = await saveFileDialog(file.name, editorStore.currentLanguage);
-          if (!path) return;
-          await fileStore.saveFileAs(id, path).catch((e: unknown) => toastStore.error(String(e)));
-        } else {
-          await fileStore.saveFile(id).catch((e: unknown) => toastStore.error(String(e)));
+        try {
+          if (!file.path) {
+            // Untitled — fall through to Save As
+            const path = await saveFileDialog(file.name, editorStore.currentLanguage);
+            if (!path) return;
+            await fileStore.saveFileAs(id, path);
+          } else {
+            await fileStore.saveFile(id);
+          }
+          toastStore.success('Saved.');
+        } catch (e: unknown) {
+          toastStore.error(`Save failed: ${e}`);
         }
-        toastStore.success('Saved.');
       },
     },
     {
@@ -79,8 +83,12 @@
         const file = fileStore.openFiles.get(id);
         const path = await saveFileDialog(file?.name, editorStore.currentLanguage);
         if (!path) return;
-        await fileStore.saveFileAs(id, path).catch((e: unknown) => toastStore.error(String(e)));
-        toastStore.success('Saved.');
+        try {
+          await fileStore.saveFileAs(id, path);
+          toastStore.success('Saved.');
+        } catch (e: unknown) {
+          toastStore.error(`Save failed: ${e}`);
+        }
       },
     },
     {
@@ -89,7 +97,7 @@
       keybind: 'Ctrl+W',
       action: () => {
         const id = fileStore.activeFileId;
-        if (id) fileStore.closeFile(id);
+        if (id) fileStore.closeFileWithConfirm(id);
       },
     },
     {

@@ -15,6 +15,10 @@
     <span class="item">UTF-8</span>
     <span class="divider"></span>
     {#if fileStore.activeFile}
+      <span class="item" title="Line endings written on save">
+        {fileStore.activeFile.eol === '\r\n' ? 'CRLF' : 'LF'}
+      </span>
+      <span class="divider"></span>
       <span class="item {fileStore.activeFile.isDirty ? 'item--dirty' : ''}">
         {fileStore.activeFile.isDirty ? '● Unsaved' : '✓ Saved'}
       </span>

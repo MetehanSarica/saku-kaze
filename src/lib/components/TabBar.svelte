@@ -9,25 +9,14 @@
    * - Run button         → calls onrun() prop (same as F5)
    */
   import { fileStore }   from '$lib/stores/fileStore.svelte';
-  import { toastStore }  from '$lib/stores/toastStore.svelte';
 
   let { onrun }: { onrun?: () => void } = $props();
 
-  async function closeTab(id: string, e: MouseEvent) {
+  function closeTab(id: string, e: MouseEvent) {
     e.stopPropagation();
-    const file = fileStore.openFiles.get(id);
-
-    if (file?.isDirty) {
-      // Use browser confirm for per-tab close — quick and non-blocking.
-      // The full 3-button Save/Discard/Cancel guard is on window close (Phase 6).
-      const discard = window.confirm(
-        `"${file.name}" has unsaved changes.\n\nClose without saving?`
-      );
-      if (!discard) return;
-      toastStore.warning(`"${file.name}" closed without saving.`);
-    }
-
-    fileStore.closeFile(id);
+    // Per-tab close asks via confirm(); the full Save/Discard/Cancel guard
+    // is on window close (Phase 6).
+    fileStore.closeFileWithConfirm(id);
   }
 
   function handleMiddleClick(id: string, e: MouseEvent) {
@@ -51,7 +40,7 @@
         role="tab"
         aria-selected={active}
         tabindex="0"
-        title={file.path}
+        title={file.path ?? file.name}
         onclick={() => fileStore.setActiveFile(file.id)}
         onkeydown={(e) => e.key === 'Enter' && fileStore.setActiveFile(file.id)}
         onmousedown={(e) => handleMiddleClick(file.id, e)}
@@ -92,7 +81,7 @@
   </div>
 {/if}
 
-<script context="module" lang="ts">
+<script module lang="ts">
   /** Map common extensions to a small indicator colour. */
   function getDotColor(name: string): string {
     const ext = name.split('.').pop()?.toLowerCase() ?? '';
