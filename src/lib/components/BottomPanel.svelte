@@ -1,10 +1,10 @@
 <script lang="ts">
   /**
-   * BottomPanel.svelte — PROBLEMS / OUTPUT / TERMINAL tabs.
+   * BottomPanel.svelte: PROBLEMS / OUTPUT / TERMINAL tabs.
    *
    * The TERMINAL tab hosts an xterm.js instance wired to a true PTY process
    * via the portable-pty Rust backend. All input/output flows through the
-   * native PTY — no fake REPL, no prompt simulation.
+   * native PTY, with no fake REPL, no prompt simulation.
    *
    * The panel stays mounted while hidden (see +page.svelte), so the terminal
    * and its scrollback survive closing/reopening the panel.
@@ -56,7 +56,7 @@
 
   let xtermEl: HTMLDivElement | undefined = $state();
 
-  // Never $state — these objects must not be wrapped in a Proxy.
+  // Never $state: these objects must not be wrapped in a Proxy.
   let term:           Terminal       | null = null;
   let fitAddon:       FitAddon       | null = null;
   let resizeObserver: ResizeObserver | null = null;
@@ -218,7 +218,7 @@
     >×</button>
   </div>
 
-  <!-- Content panels — all kept in DOM; hidden via CSS so xterm canvas survives tab switches -->
+  <!-- Content panels are all kept in DOM; hidden via CSS so xterm canvas survives tab switches -->
 
   <div class="bp-content" class:bp-hidden={uiStore.activeBottomTab !== 'problems'} aria-hidden={uiStore.activeBottomTab !== 'problems'}>
     <div class="bp-empty">No problems have been detected in the workspace.</div>

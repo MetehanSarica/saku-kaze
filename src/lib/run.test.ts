@@ -6,7 +6,7 @@ describe('psQuote', () => {
     expect(psQuote("C:\\it's\\a.py")).toBe("'C:\\it''s\\a.py'");
   });
 
-  it('leaves $ alone — single quotes do not expand variables', () => {
+  it('leaves $ alone because single quotes do not expand variables', () => {
     expect(psQuote('C:\\$env\\a.py')).toBe("'C:\\$env\\a.py'");
   });
 });

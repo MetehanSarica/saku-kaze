@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * Sidebar.svelte — file explorer panel.
+   * Sidebar.svelte: file explorer panel.
    *
    * States:
    *   No workspace open → shows "Open Folder" button (native dialog).
@@ -35,7 +35,7 @@
 
 <aside class="sidebar">
 
-  <!-- Header — title changes per active tab -->
+  <!-- Header: title changes per active tab -->
   <div class="sidebar-header">
     <span class="sidebar-title">
       {#if uiStore.activeSideBarTab === 'explorer'}Explorer

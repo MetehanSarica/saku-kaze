@@ -5,7 +5,7 @@
  * making a selection, so callers can pattern-match `if (!result) return`.
  *
  * Errors (OS dialog failure, plugin not registered, etc.) propagate as
- * rejected Promises — callers should funnel them through toastStore.
+ * rejected Promises; callers should funnel them through toastStore.
  */
 import { open, save, ask, message } from '@tauri-apps/plugin-dialog';
 
@@ -15,7 +15,7 @@ import { open, save, ask, message } from '@tauri-apps/plugin-dialog';
 
 /** Open a native file-picker. Returns the chosen absolute path or null. */
 export async function openFileDialog(): Promise<string | null> {
-  // open() with multiple:false returns string | null — no array case.
+  // open() with multiple:false returns string | null, no array case.
   return open({
     title: 'Open File',
     multiple: false,
@@ -77,7 +77,7 @@ const LANG_EXT: Record<string, string> = {
 /**
  * Open a native save-file dialog.
  * @param suggestedName  Pre-filled filename shown in the dialog.
- * @param language       Active CodeMirror LanguageId — used to set the
+ * @param language       Active CodeMirror LanguageId, used to set the
  *                       default filter so the OS dialog defaults to the
  *                       right extension (e.g. "Python Files (*.py)").
  * @returns The chosen absolute path, or null if cancelled.
@@ -95,7 +95,7 @@ export async function saveFileDialog(
     title: 'Save File',
     defaultPath: suggestedName,
     filters: [
-      // First filter is the OS default — always the active language type.
+      // First filter is the OS default: always the active language type.
       { name: `${langLabel} Files`,  extensions: [primaryExt] },
       { name: 'Text & Code', extensions: ['txt', 'md', 'js', 'ts', 'rs', 'py', 'json', 'html', 'css'] },
       { name: 'All Files',   extensions: ['*'] },

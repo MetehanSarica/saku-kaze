@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * CommandPalette.svelte — Ctrl+Shift+P quick-action overlay.
+   * CommandPalette.svelte: Ctrl+Shift+P quick-action overlay.
    *
    * Implements fuzzy-text filtering over a command list, keyboard navigation
    * (↑↓ + Enter), and Escape-to-close.  Commands delegate to stores/IPC.
@@ -60,7 +60,7 @@
         if (!file) return;
         try {
           if (!file.path) {
-            // Untitled — fall through to Save As
+            // Untitled: fall through to Save As
             const path = await saveFileDialog(file.name, editorStore.currentLanguage);
             if (!path) return;
             await fileStore.saveFileAs(id, path);

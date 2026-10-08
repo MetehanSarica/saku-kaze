@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * Toast.svelte — stackable notification toasts.
+   * Toast.svelte: stackable notification toasts.
    * Renders in the top-right corner, auto-dismisses after the store's timer.
    * Errors from Rust IPC (Result<T, String>) are surfaced here.
    */

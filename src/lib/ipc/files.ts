@@ -15,7 +15,7 @@ interface FileChunkPayload {
 /**
  * Read a UTF-8 text file.
  *
- * Files < 5 MiB are returned inline. Files 5–50 MiB trigger chunked
+ * Files < 5 MiB are returned inline. Files 5-50 MiB trigger chunked
  * streaming over `file-chunk` events; this wrapper reassembles them
  * transparently so callers always receive a single string.
  * Files > 50 MiB reject with an error string from Rust.
@@ -36,7 +36,7 @@ export async function readFile(path: string): Promise<string> {
   const timeout = setTimeout(() => {
     timedOut = true;
     unlisten();
-    rejectStream(new Error(`Timed out reading '${path}' — streaming did not complete within 30 s`));
+    rejectStream(new Error(`Timed out reading '${path}': streaming did not complete within 30 s`));
   }, 30_000);
 
   const unlisten = await listen<FileChunkPayload>('file-chunk', (event) => {

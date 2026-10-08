@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * Breadcrumb.svelte — path strip above the editor.
+   * Breadcrumb.svelte: path strip above the editor.
    *
    * Shows: workspaceName › relative › path › segments › filename
    * Derived from fileStore.activeFile.path and workspaceStore.rootPath.

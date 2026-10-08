@@ -8,7 +8,7 @@ const LARGE_FILE_THRESHOLD: usize = 5 * 1024 * 1024;   // 5 MiB
 /// Files above this limit are rejected outright.
 const MAX_FILE_SIZE: usize = 50 * 1024 * 1024;          // 50 MiB
 
-/// IPC chunk size for 5–50 MiB files streamed via Tauri events.
+/// IPC chunk size for 5-50 MiB files streamed via Tauri events.
 const CHUNK_SIZE: usize = 1024 * 1024;                  // 1 MiB per chunk
 
 // ---------------------------------------------------------------------------
@@ -17,7 +17,7 @@ const CHUNK_SIZE: usize = 1024 * 1024;                  // 1 MiB per chunk
 
 #[derive(Serialize, Clone)]
 pub struct FileChunkPayload {
-    /// Absolute path — lets the frontend demux events for concurrent opens.
+    /// Absolute path, so the frontend can demux events for concurrent opens.
     pub path: String,
     /// UTF-8 data for this chunk (may be empty on the terminal chunk).
     pub data: String,
@@ -33,7 +33,7 @@ pub struct FileChunkPayload {
 ///
 /// Size tiers:
 ///   < 5 MiB   → returned inline as a `String`.
-///   5–50 MiB  → returns `"STREAMING"` and emits `file-chunk` events (1 MiB
+///   5-50 MiB  → returns `"STREAMING"` and emits `file-chunk` events (1 MiB
 ///               each). The frontend's `readFile()` wrapper reassembles them.
 ///   > 50 MiB  → returns `Err("File exceeds 50MB limit")`.
 #[tauri::command]
@@ -49,7 +49,7 @@ pub async fn read_file(app: tauri::AppHandle, path: String) -> Result<String, St
 
     if size > MAX_FILE_SIZE {
         return Err(format!(
-            "File exceeds 50MB limit: '{}' is {:.1} MB — use a dedicated tool for files this large.",
+            "File exceeds 50MB limit: '{}' is {:.1} MB. Use a dedicated tool for files this large.",
             path,
             size as f64 / (1024.0 * 1024.0)
         ));
@@ -107,7 +107,7 @@ fn split_on_char_boundaries(text: &str, max_bytes: usize) -> Vec<&str> {
             end -= 1;
         }
         if end == start {
-            // max_bytes is smaller than this character — emit it whole.
+            // max_bytes is smaller than this character, so emit it whole.
             end = start + 1;
             while !text.is_char_boundary(end) {
                 end += 1;
@@ -133,7 +133,7 @@ pub async fn write_file(path: String, content: String) -> Result<(), String> {
     let target = Path::new(&path);
 
     let parent = target.parent().ok_or_else(|| {
-        format!("'{}' has no parent directory — cannot write file", path)
+        format!("'{}' has no parent directory, cannot write file", path)
     })?;
 
     let file_name = target

@@ -1,9 +1,9 @@
 /**
- * workspaceStore — reactive state for the open folder, directory tree,
+ * workspaceStore: reactive state for the open folder, directory tree,
  * and recent-files list.
  *
  * Phase 7 additions:
- *  - recentFiles: string[] — persisted in settings, populated by addRecentFile().
+ *  - recentFiles: string[], persisted in settings, populated by addRecentFile().
  *  - openFolder() and closeFolder() persist lastWorkspace via patchAndSave().
  *  - addRecentFile() is called by fileStore.openFile() on every successful open.
  */
@@ -70,7 +70,7 @@ class WorkspaceStore {
       patchAndSave({ lastWorkspace: path }).catch(console.error);
     } catch (err: unknown) {
       this.error = typeof err === 'string' ? err : String(err);
-      // Do NOT clear rootPath / tree — leave previous state visible
+      // Do NOT clear rootPath / tree; leave previous state visible
     } finally {
       this.isLoading = false;
     }

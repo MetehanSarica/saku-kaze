@@ -2,20 +2,20 @@
 
 **A high-performance, offline-first text editor built with Tauri v2, Rust, and Svelte 5.**
 
-Saku Kaze is a lightweight yet powerful code editor engineered for speed, reliability, and a deeply integrated developer experience. No network telemetry, no background AI overhead — just a pure, optimized tool designed to keep you in the flow state.
+Saku Kaze is a lightweight yet powerful code editor engineered for speed, reliability, and a deeply integrated developer experience. No network telemetry, no background AI overhead, just a pure, optimized tool designed to keep you in the flow state.
 
-> *"Saku Kaze" (咲く風) — the blooming wind.*
+> *"Saku Kaze" (咲く風): the blooming wind.*
 
 ---
 
 ## ✨ Features
 
-- **True PTY Terminal** — A fully integrated terminal powered by a custom Rust backend and `portable-pty`. Handles complex background processes, pipe disconnects, and standard I/O without crashing.
-- **Optimized Editor Engine** — Powered by CodeMirror 6 with Svelte 5 Runes-based state management. Completely race-condition-free — keystrokes and file syncs stay perfectly aligned.
-- **Chunked File Streaming** — Safely reads and streams large files (up to 50 MiB) using chunked Rust payloads, preventing UI freezes or main-thread blocking.
-- **Smart Auto-Save** — Intelligent "Auto-Save on Run" ensures your code is always written to disk before execution.
-- **Saku Dark Theme** — A bespoke dark aesthetic crafted for long coding sessions to minimize eye strain.
-- **Native OS Integration** — Custom context menus and deeply integrated window management.
+- **True PTY Terminal:** A fully integrated terminal powered by a custom Rust backend and `portable-pty`. Handles complex background processes, pipe disconnects, and standard I/O without crashing.
+- **Optimized Editor Engine:** Powered by CodeMirror 6 with Svelte 5 Runes-based state management. Completely race-condition-free: keystrokes and file syncs stay perfectly aligned.
+- **Chunked File Streaming:** Safely reads and streams large files (up to 50 MiB) using chunked Rust payloads, preventing UI freezes or main-thread blocking.
+- **Smart Auto-Save:** Intelligent "Auto-Save on Run" ensures your code is always written to disk before execution.
+- **Saku Dark Theme:** A bespoke dark aesthetic crafted for long coding sessions to minimize eye strain.
+- **Native OS Integration:** Custom context menus and deeply integrated window management.
 
 ---
 
@@ -35,7 +35,7 @@ Saku Kaze is a lightweight yet powerful code editor engineered for speed, reliab
 
 1. Go to the [Releases](https://github.com/MetehanSarica/saku-kaze/releases) page.
 2. Download the latest `Saku Kaze_x.x.x_x64-setup.exe` file.
-3. Run the installer — it installs locally to the current user and requires **no administrator privileges**.
+3. Run the installer. It installs locally to the current user and requires **no administrator privileges**.
 4. Launch Saku Kaze.
 
 ---

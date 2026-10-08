@@ -1,5 +1,5 @@
 /**
- * F5 "run file" — builds the PowerShell command line sent to the terminal.
+ * F5 "run file": builds the PowerShell command line sent to the terminal.
  *
  * The command runs from the file's own directory (so `cargo run` finds the
  * nearest Cargo.toml and relative paths behave), then returns the terminal to

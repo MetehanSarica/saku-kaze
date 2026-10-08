@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * Editor.svelte — the CodeMirror 6 editor component.
+   * Editor.svelte: the CodeMirror 6 editor component.
    *
    * Responsibilities:
    *  - Create and own a single EditorView instance (lifecycle: mount → destroy).
@@ -37,7 +37,7 @@
   // ── DOM reference ─────────────────────────────────────────────────────────
   let container: HTMLDivElement;
 
-  // ── Editor view (plain let, not $state — EditorView must not be proxied) ──
+  // ── Editor view (plain let, not $state: EditorView must not be proxied) ──
   let view: EditorView | null = null;
 
   /**
@@ -206,7 +206,7 @@
 <!--
   The container div receives the CodeMirror editor via EditorView({ parent }).
   Font size is driven by a CSS variable so we avoid reconfiguring the entire
-  view just for a font change — CSS handles it for free.
+  view just for a font change. CSS handles it for free.
 -->
 <div
   class="editor-host"

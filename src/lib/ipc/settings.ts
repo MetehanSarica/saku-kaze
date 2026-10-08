@@ -11,7 +11,7 @@
 import { invoke } from '@tauri-apps/api/core';
 
 /**
- * User settings — mirrors the Rust `AppSettings` struct.
+ * User settings, mirroring the Rust `AppSettings` struct.
  * Field names are camelCase because Rust serialises with `rename_all = "camelCase"`.
  */
 export interface AppSettings {
@@ -32,7 +32,7 @@ export interface AppSettings {
 /**
  * Load settings from disk.
  * Returns application defaults if the settings file does not yet exist
- * or is corrupt — the app never hard-errors on missing settings.
+ * or is corrupt; the app never hard-errors on missing settings.
  */
 export async function loadSettings(): Promise<AppSettings> {
   return invoke<AppSettings>('load_settings');

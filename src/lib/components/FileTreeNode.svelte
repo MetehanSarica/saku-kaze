@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * FileTreeNode.svelte — one node (file or directory) in the sidebar tree.
+   * FileTreeNode.svelte: one node (file or directory) in the sidebar tree.
    * Imports itself recursively for directories.
    */
   import FileTreeNode   from './FileTreeNode.svelte';
@@ -140,7 +140,7 @@
   {/if}
 </div>
 
-<!-- Context menu — rendered relative to viewport -->
+<!-- Context menu, rendered relative to viewport -->
 {#if ctxVisible}
   <!-- Backdrop to close on outside click -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->

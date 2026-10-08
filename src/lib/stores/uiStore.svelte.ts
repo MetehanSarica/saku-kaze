@@ -1,5 +1,5 @@
 /**
- * uiStore — cross-component UI state.
+ * uiStore: cross-component UI state.
  *
  * Phase 7+: activity bar tab, sidebar visibility, bottom panel state.
  * Phase 8+: zen mode, output log.
@@ -84,7 +84,7 @@ class UiStore {
   // ── Hydration ─────────────────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   hydrate(_s: AppSettings): void {
-    // Nothing to restore yet — extend when panel heights land in AppSettings.
+    // Nothing to restore yet; extend when panel heights land in AppSettings.
   }
 }
 

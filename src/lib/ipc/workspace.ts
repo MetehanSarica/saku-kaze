@@ -7,10 +7,10 @@ import { invoke } from '@tauri-apps/api/core';
  * A node in the directory tree, mirroring the Rust `FileNode` struct.
  *
  * `children` meanings:
- *   `null`     — directory whose contents have not been loaded yet (lazy node).
- *   `[]`       — directory that is genuinely empty.
- *   `[...]`    — directory with loaded children.
- *   `null`     — also used for plain files (is_dir === false).
+ *   `null`: directory whose contents have not been loaded yet (lazy node).
+ *   `[]`: directory that is genuinely empty.
+ *   `[...]`: directory with loaded children.
+ *   `null`: also used for plain files (is_dir === false).
  */
 export interface FileNode {
   name: string;
@@ -31,7 +31,7 @@ export async function readDirectory(path: string): Promise<FileNode[]> {
 
 /**
  * Read only the immediate children of `path` (no recursion).
- * Directory children are returned with `children: null` — they must be
+ * Directory children are returned with `children: null`; they must be
  * expanded on demand via a subsequent `readDirectoryShallow` call.
  */
 export async function readDirectoryShallow(path: string): Promise<FileNode[]> {

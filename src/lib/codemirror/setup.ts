@@ -4,7 +4,7 @@
  * Exports:
  *  - Four Compartments (language, theme, wordWrap, tabSize) used by Editor.svelte
  *    to reconfigure the view without destroying and recreating it.
- *  - `createBaseExtensions()` — the static extension list shared by every editor.
+ *  - `createBaseExtensions()`: the static extension list shared by every editor.
  *
  * Compartments are module-level singletons because there is only one editor
  * instance in this app at a time.
@@ -52,7 +52,7 @@ import { lintKeymap, lintGutter, linter, type Diagnostic } from '@codemirror/lin
 import type { Extension } from '@codemirror/state';
 
 // ---------------------------------------------------------------------------
-// Compartments — dynamic slots that can be reconfigured without a full rebuild
+// Compartments: dynamic slots that can be reconfigured without a full rebuild
 // ---------------------------------------------------------------------------
 
 /** Swapped when the user opens a file with a different language. */

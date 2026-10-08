@@ -46,7 +46,7 @@ struct PtyExitPayload {
 
 /// Opens a real PTY and spawns PowerShell inside it.
 ///
-/// Idempotent — returns Ok immediately if a shell is already running.
+/// Idempotent: returns Ok immediately if a shell is already running.
 /// `cwd` is the starting directory (falls back to the home directory when
 /// missing or invalid); `cols`/`rows` set the initial PTY size.
 ///
@@ -177,7 +177,7 @@ pub fn write_pty(data: String, state: State<'_, PtyState>) -> Result<(), String>
 
     let session = guard
         .as_mut()
-        .ok_or_else(|| "PTY not running — call spawn_pty first".to_string())?;
+        .ok_or_else(|| "PTY not running, call spawn_pty first".to_string())?;
 
     session
         .writer
@@ -240,7 +240,7 @@ fn decode_utf8_stream(pending: &mut Vec<u8>, input: &[u8]) -> String {
                         out.push('\u{FFFD}');
                         start += len;
                     }
-                    None => break, // incomplete char at the end — wait for more bytes
+                    None => break, // incomplete char at the end, wait for more bytes
                 }
             }
         }

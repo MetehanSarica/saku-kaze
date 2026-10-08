@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * TitleBar.svelte — custom frameless title bar.
+   * TitleBar.svelte: custom frameless title bar.
    *
    * The entire bar carries data-tauri-drag-region so the user can drag the
    * window by clicking anywhere that is NOT a button.  Window-control buttons
@@ -53,14 +53,14 @@
   <div class="titlebar-left" data-tauri-drag-region>
     <span class="app-name" data-tauri-drag-region>Saku Kaze</span>
     {#if fileStore.activeFile}
-      <span class="separator" data-tauri-drag-region>—</span>
+      <span class="separator" data-tauri-drag-region>-</span>
       <span class="file-name" data-tauri-drag-region>
         {fileStore.activeFile.name}{fileStore.activeFile.isDirty ? ' ●' : ''}
       </span>
     {/if}
   </div>
 
-  <!-- Window controls — must NOT be draggable -->
+  <!-- Window controls: must NOT be draggable -->
   <div class="wctl-group">
     <button class="wctl wctl-min"   onclick={minimize}       aria-label="Minimize"
       title="Minimize">

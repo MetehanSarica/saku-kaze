@@ -76,7 +76,7 @@
 {/if}
 
 <style>
-  /* Invisible full-screen backdrop — closes the menu on outside interaction */
+  /* Invisible full-screen backdrop that closes the menu on outside interaction */
   .cm-backdrop {
     position: fixed;
     inset: 0;
@@ -84,7 +84,7 @@
     background: transparent;
   }
 
-  /* Menu panel — floats above the backdrop */
+  /* Menu panel, floats above the backdrop */
   .cm-menu {
     position: fixed;
     z-index: 1000;

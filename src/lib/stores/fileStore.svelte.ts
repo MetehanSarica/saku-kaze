@@ -1,5 +1,5 @@
 /**
- * fileStore — reactive state for open editor tabs.
+ * fileStore: reactive state for open editor tabs.
  *
  * Architecture rules:
  *  - Svelte 5 Runes ONLY. No legacy stores.
@@ -35,7 +35,7 @@ export interface OpenFile {
   content: string;
   /** True when the buffer has changes not yet written to disk. */
   isDirty: boolean;
-  /** Line ending written to disk on save — detected on open. */
+  /** Line ending written to disk on save, detected on open. */
   eol: LineEnding;
   /** Syntax language for this tab. */
   language: LanguageId;
@@ -86,7 +86,7 @@ class FileStore {
 
   private idCounter       = 0;
   private untitledCounter = 0;
-  /** In-flight opens keyed by normalised path — prevents duplicate tabs. */
+  /** In-flight opens keyed by normalised path, to prevent duplicate tabs. */
   private pendingOpens    = new Map<string, Promise<void>>();
 
   // ── Derived ──────────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ class FileStore {
 
   /**
    * Save an open file to its existing path.
-   * Throws if the file has no path — callers must use saveFileAs() instead.
+   * Throws if the file has no path; callers must use saveFileAs() instead.
    */
   async saveFile(id: string): Promise<void> {
     const file = this.openFiles.get(id);
@@ -239,7 +239,7 @@ class FileStore {
   }
 
   /**
-   * Close a tab by id. Does NOT check dirty state — use closeFileWithConfirm()
+   * Close a tab by id. Does NOT check dirty state; use closeFileWithConfirm()
    * for user-initiated closes.
    * Focus moves to the most-recently-added remaining tab.
    */

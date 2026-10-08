@@ -1,10 +1,10 @@
 /**
- * editorStore — reactive state for CodeMirror editor configuration.
+ * editorStore: reactive state for CodeMirror editor configuration.
  *
  * Phase 7: each user-facing setter now calls patchAndSave() so preferences
  * are persisted to ~/.saku-kaze/settings.json immediately on change.
  * Initial hydration is done via hydrate() called from +page.svelte after
- * loadSettings() returns — hydrate() does NOT trigger a save.
+ * loadSettings() returns; hydrate() does NOT trigger a save.
  */
 import { patchAndSave } from '$lib/ipc/settings';
 import type { AppSettings } from '$lib/ipc/settings';
@@ -111,7 +111,7 @@ class EditorStore {
 
   setLanguage(lang: LanguageId): void {
     this.currentLanguage = lang;
-    // language is not persisted in settings — it's detected per-file
+    // language is not persisted in settings, it's detected per-file
   }
 
   setFontSize(size: number): void {
@@ -139,7 +139,7 @@ class EditorStore {
     patchAndSave({ autoSave: this.autoSave }).catch(console.error);
   }
 
-  /** Update cursor position — called by CodeMirror on each selection change. */
+  /** Update cursor position. Called by CodeMirror on each selection change. */
   setCursor(line: number, col: number): void {
     this.cursorLine = line;
     this.cursorCol = col;
@@ -183,7 +183,7 @@ const EXT_LANGUAGE: Record<string, LanguageId> = {
   java: 'java',
 };
 
-/** Detect the language for a file path from its extension (pure — no state change). */
+/** Detect the language for a file path from its extension (pure, no state change). */
 export function detectLanguage(filePath: string): LanguageId {
   const base = filePath.replace(/\\/g, '/').split('/').pop() ?? '';
   if (!base.includes('.')) return 'plaintext';

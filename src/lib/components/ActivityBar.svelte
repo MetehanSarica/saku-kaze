@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * ActivityBar.svelte — the narrow icon strip on the far left (VSCode-style).
+   * ActivityBar.svelte: the narrow icon strip on the far left (VSCode-style).
    *
    * Top group: Explorer, Search, Source Control, Extensions.
    * Bottom group: Account, Settings.

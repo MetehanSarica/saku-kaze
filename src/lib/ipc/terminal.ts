@@ -13,7 +13,7 @@ export interface SpawnPtyOptions {
   rows:  number;
 }
 
-/** Start the PowerShell PTY. Idempotent — no-op if a shell is already running. */
+/** Start the PowerShell PTY. Idempotent: no-op if a shell is already running. */
 export async function spawnPty(opts: SpawnPtyOptions): Promise<void> {
   return invoke<void>('spawn_pty', { cwd: opts.cwd ?? null, cols: opts.cols, rows: opts.rows });
 }

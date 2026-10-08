@@ -1,7 +1,7 @@
 /**
  * Language support registry for CodeMirror 6.
  *
- * All language packages are bundled at build time — no dynamic imports,
+ * All language packages are bundled at build time: no dynamic imports,
  * no CDN fetches. This keeps the app fully offline-capable.
  */
 import { javascript } from '@codemirror/lang-javascript';

@@ -1,9 +1,9 @@
 /**
- * terminalStore — lifecycle of the single PTY shell session.
+ * terminalStore: lifecycle of the single PTY shell session.
  *
  * BottomPanel owns the xterm instance and registers a `starter` (which spawns
  * the PTY at the terminal's current size) via attach(). Anyone who needs a
- * running shell — e.g. F5 "run file" — calls ensureRunning(), which waits for
+ * running shell (e.g. F5 "run file") calls ensureRunning(), which waits for
  * the terminal to be attached, starts the shell if needed, and dedupes
  * concurrent starts. markExited() is called on the `pty-exit` event.
  */
@@ -61,7 +61,7 @@ class TerminalStore {
     return new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.attachWaiters = this.attachWaiters.filter(w => w !== done);
-        reject(new Error('Terminal did not start — open the TERMINAL panel and try again.'));
+        reject(new Error('Terminal did not start. Open the TERMINAL panel and try again.'));
       }, ATTACH_TIMEOUT_MS);
       const done = () => { clearTimeout(timer); resolve(); };
       this.attachWaiters.push(done);

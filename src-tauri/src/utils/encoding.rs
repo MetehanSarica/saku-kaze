@@ -1,4 +1,4 @@
-// Encoding detection stub — Phase 8 will implement UTF-8 / UTF-16 detection.
+// Encoding detection stub. Phase 8 will implement UTF-8 / UTF-16 detection.
 // Currently unused; suppressing dead_code warnings.
 #![allow(dead_code)]
 

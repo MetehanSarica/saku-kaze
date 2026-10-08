@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * +page.svelte — root layout, global keyboard orchestrator, close-guard.
+   * +page.svelte: root layout, global keyboard orchestrator, close-guard.
    *
    * CSS Grid (Phase 8 layout):
    *   Row 1 (32px)  : TitleBar
@@ -212,7 +212,7 @@
         toastStore.error(`Save failed: ${err}`);
         return null;
       });
-      if (!savedPath) return; // user cancelled — abort silently
+      if (!savedPath) return; // user cancelled, abort silently
       // doSaveAs already wrote the file to disk; the tab id is unchanged.
     } else {
       // ── Named file: silent auto-save before execution ──────────────────
@@ -263,7 +263,7 @@
   <!-- Row 2: Main body -->
   <div class="body-row">
 
-    <!-- Activity bar (50px) — hidden in zen mode -->
+    <!-- Activity bar (50px), hidden in zen mode -->
     {#if !uiStore.zenMode}
       <ActivityBar />
     {/if}
@@ -312,7 +312,7 @@
 
   </div>
 
-  <!-- Row 3: Status bar — hidden in zen mode -->
+  <!-- Row 3: Status bar, hidden in zen mode -->
   {#if !uiStore.zenMode}
     <StatusBar />
   {/if}

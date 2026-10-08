@@ -1,5 +1,5 @@
 /**
- * toastStore — lightweight notification queue.
+ * toastStore: lightweight notification queue.
  * Consumed by Toast.svelte, pushed from anywhere via toastStore.error() etc.
  */
 

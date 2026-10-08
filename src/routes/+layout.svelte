@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Vendored fonts — bundled by Vite, no CDN
+  // Vendored fonts, bundled by Vite (no CDN)
   import '@fontsource-variable/inter';
   import '@fontsource-variable/jetbrains-mono';
   import '../app.css';

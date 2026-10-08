@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * StatusBar.svelte — bottom strip showing editor metadata.
+   * StatusBar.svelte: bottom strip showing editor metadata.
    * All values are derived reactively from editorStore and fileStore.
    */
   import { fileStore }   from '$lib/stores/fileStore.svelte';

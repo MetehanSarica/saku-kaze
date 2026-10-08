@@ -1,5 +1,5 @@
 /**
- * Saku Kaze — sakuDark theme for CodeMirror 6.
+ * Saku Kaze: sakuDark theme for CodeMirror 6.
  *
  * Palette (from plan.md):
  *   Background   #0d1117  (near-black)
@@ -48,7 +48,7 @@ const sakuDarkEditorTheme = EditorView.theme(
     // Focused border
     '&.cm-focused': { outline: 'none' },
 
-    // Active line — transparent so the selection layer shows through
+    // Active line: transparent so the selection layer shows through
     '.cm-activeLine':       { backgroundColor: '#ffffff0f' },
     '.cm-activeLineGutter': { backgroundColor: '#ffffff0f' },
 
@@ -145,33 +145,33 @@ const sakuDarkEditorTheme = EditorView.theme(
 // ---------------------------------------------------------------------------
 
 const sakuDarkHighlightStyle = HighlightStyle.define([
-  // Keywords — ice blue
+  // Keywords: ice blue
   { tag: t.keyword,                   color: '#7dcfff', fontWeight: 'bold' },
   { tag: t.operatorKeyword,           color: '#7dcfff' },
   { tag: t.modifier,                  color: '#7dcfff' },
   { tag: t.definitionKeyword,         color: '#7dcfff' },
   { tag: t.controlKeyword,            color: '#ff7b72' },   // control flow: red-orange
 
-  // Strings — sakura pink
+  // Strings: sakura pink
   { tag: [t.string, t.special(t.string)], color: '#f0a0b0' },
   { tag: t.regexp,                        color: '#f0a0b0' },
   { tag: t.inserted,                      color: '#f0a0b0' },
 
-  // Comments — muted gray
+  // Comments: muted gray
   { tag: [t.comment, t.lineComment, t.blockComment, t.docComment], color: '#6e7681', fontStyle: 'italic' },
 
-  // Numbers & booleans — warm orange
+  // Numbers & booleans: warm orange
   { tag: [t.number, t.integer, t.float],  color: '#ffa657' },
   { tag: t.bool,                          color: '#79c0ff' },
   { tag: t.null,                          color: '#79c0ff' },
 
-  // Types & classes — soft purple
+  // Types & classes: soft purple
   { tag: [t.typeName, t.className],       color: '#d2a8ff' },
   { tag: t.namespace,                     color: '#d2a8ff' },
   { tag: t.self,                          color: '#d2a8ff' },
   { tag: t.annotation,                    color: '#d2a8ff' },
 
-  // Functions — pale gold / light blue
+  // Functions: pale gold / light blue
   { tag: [t.function(t.variableName), t.function(t.propertyName)], color: '#e3b341' },
   { tag: t.labelName,                     color: '#c9d1d9' },
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * TabBar.svelte — horizontal scrollable strip of open-file tabs.
+   * TabBar.svelte: horizontal scrollable strip of open-file tabs.
    *
    * - Click a tab        → focuses it
    * - Middle-click       → close (with dirty guard)
@@ -174,7 +174,7 @@
     color: var(--sk-pink);
     font-size: 9px;
     flex-shrink: 0;
-    /* Hide when tab is hovered — close button takes over */
+    /* Hide when tab is hovered; the close button takes over */
   }
   .tab:hover .tab-dirty { display: none; }
 

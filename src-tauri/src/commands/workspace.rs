@@ -16,7 +16,7 @@ const MAX_DEPTH: usize = 32;
 /// sorted case-insensitively by name.
 ///
 /// Symlinks are followed. Entries that cannot be read (e.g. permission errors)
-/// are silently skipped — the caller will see a partial tree rather than an
+/// are silently skipped; the caller will see a partial tree rather than an
 /// outright error, which is friendlier for system directories.
 #[tauri::command]
 pub async fn read_directory(path: String) -> Result<Vec<FileNode>, String> {
@@ -88,7 +88,7 @@ fn read_dir_one_level(dir: &Path) -> Result<Vec<FileNode>, String> {
     Ok(nodes)
 }
 
-/// Internal recursive helper — separated so we can track depth without
+/// Internal recursive helper, separated so we can track depth without
 /// exposing the depth parameter over IPC.
 fn read_dir_recursive(dir: &Path, depth: usize) -> Result<Vec<FileNode>, String> {
     if depth > MAX_DEPTH {

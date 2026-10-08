@@ -101,7 +101,7 @@
             <div class="setting-row">
               <div class="setting-info">
                 <span class="setting-name">Font Size</span>
-                <span class="setting-desc">Editor font size in pixels (8–48)</span>
+                <span class="setting-desc">Editor font size in pixels (8-48)</span>
               </div>
               <div class="number-control">
                 <button
